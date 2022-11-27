@@ -178,7 +178,7 @@ classdef Solver < handle
           break;
         end
 
-        population = obj.crossover(population);
+        population = obj.crossover(population, 1);
       end
     end
   end
