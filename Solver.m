@@ -51,8 +51,14 @@ classdef Solver < handle
       end
 
       for i = (3:obj.chromosome_len)
-        if (chromosome(i).isEqual(chromosome(i - 2)) && chromosome(i).isEqual(chromosome(i - 1))) || (chromosome(i).isOpposite(chromosome(i - 1)))
-          chromosome(i) = chromosome(i - 1).getDifferentAxis();
+        if chromosome(i).isEqual(chromosome(i - 2)) && chromosome(i).isEqual(chromosome(i - 1))
+          chromosome(i) = chromosome(i).getDifferentAxis();
+        elseif chromosome(i).isOpposite(chromosome(i - 1))
+          if chromosome(i - 1).isEqual(chromosome(i - 2))
+            chromosome(i) = chromosome(i).getDifferentAxis();
+          else
+            chromosome(i) = chromosome(i).getDifferent();
+          end
         end
       end
     end
@@ -71,7 +77,24 @@ classdef Solver < handle
           puzzle.move(chromosome(i));
 	      i = i + 1;
         catch
-          chromosome(i) = chromosome(i).getDifferentAxis();
+          if i == 1
+            pre_move = Direction(0);
+          else
+            pre_move = chromosome(i - 1);
+          end
+          
+          if i == length(chromosome)
+            next_move = Direction(0);
+          else
+            next_move = chromosome(i + 1);
+          end
+          
+          [current_move, next_move] = puzzle.validMove(pre_move, next_move);
+          chromosome(i) = current_move;
+          
+          if next_move ~= 0
+            chromosome(i + 1) = next_move;
+          end
         end
       end
     end
@@ -138,6 +161,14 @@ classdef Solver < handle
         end
       end
     end
+    
+    function chromosomes = reshapePopulation(obj, population)
+      chromosomes = repmat(Direction.base, size(population, 1), obj.chromosome_len);
+      
+      for i = (1:size(population, 1))
+        chromosomes(i, 1:size(population, 2)) = population(i, :);
+      end
+    end
 
     function solution(obj)
       generation = 0;
@@ -169,6 +200,7 @@ classdef Solver < handle
         if floor(generation / obj.inc_range_chromosome) > n_inc
           n_inc = n_inc + 1;
           obj.chromosome_len = obj.chromosome_len + obj.inc_size_chromosome;
+          population = obj.reshapePopulation(population);
         end
 
 %         implement
