@@ -9,6 +9,34 @@ classdef Puzzle < handle
         obj.puzzle = reshape(puzzle, [3, 3])';
         obj.goal = reshape(goal, [3, 3])';
       end
+      
+      function [current_move, next_move] = validMove(obj, pre_move, next_move)
+        i = [1, 2, 3, 4];
+        i(i == pre_move.getOpposite()) = [];
+        i(i == next_move.getOpposite()) = [];
+        
+        [x, y] = find(obj.puzzle == 0);
+        
+        if x ~= 2
+          i(i == x) = [];
+        end
+        
+        if y == 1
+          i(i == 4) = [];
+        end
+        
+        if y == 3
+          i(i == 2) = [];
+        end
+        
+        if isempty(i)
+          current_move = next_move.getOpposite();
+          next_move = next_move.getDifferent();
+          return;
+        end
+        
+        current_move = Direction(i(randi(length(i))));
+      end
 
       function move(obj, direction)
         if ~isa(direction, 'Direction')
